@@ -1,79 +1,93 @@
-#include <iostream> 
-#include <stdlib.h>
-using namespace std; 
 
+#include <iostream>
+#include<stdlib.h>
+using namespace std;
 
-int MatrixChain(int *p,int n,int **m,int **s); 
-void Traceback(int i,int j,int **s);
-void Traceback1(int i,int j,int **s); 
-int main()
-{ 
-	int n = 6;
-	int p[]={16,18,22,55,80,88,66};
+#define MaxInt 32767    
+#define MVNum 100       
 
-    int **s = new int *[n+1];
-	int **m = new int *[n+1];
-	for(int i=0;i<=n;i++)  
-    {  
-		s[i] = new int[n+1];
-		m[i] = new int[n+1];
-    } 
-	cout<<"矩阵的最少计算次数："<<MatrixChain(p,n,m,s)<<endl;
-	cout<<"矩阵最优计算次序："<<endl;
-	Traceback(1,6,s);
-	Traceback1(1,6,s);
-	system("pause");
-	return 0;
-}
+template<class Type>
+void Dijkstra(int n,int v,Type dist[],int prev[],Type c[][MVNum])
+{  
+    bool s[MVNum];
 
-int MatrixChain(int *p,int n,int **m,int **s)
-{
-	for(int i=1; i<=n; i++)
-	{
-		m[i][i] = 0;
+	for(int i = 1;i<=n; i++)
+	{           						 
+	    dist[i] = c[v][i]; 
+		s[i] = false;   
+		if(dist[i]==MaxInt)  prev[i] =0;  	
+		else prev[i] = v;               
 	}
-	for(int r=2; r<=n; r++)   
-	{
-		for(int i=1; i<=n-r+1; i++)
-		{
-			int j = i+r-1; 
 
-			m[i][j] = m[i+1][j] + p[i-1]*p[i]*p[j];
-
-			s[i][j] = i;
-
-			for(int k=i+1; k<j; k++)
-			{ 
-				int t = m[i][k] + m[k+1][j] + p[i-1]*p[k]*p[j];
-				if(t<m[i][j])
+   	dist[v]=0;         	
+	s[v]=true;        
+	
+	for(int i = 1;i < n; ++i){	 
+        int temp= MaxInt; 
+        int u=v;
+		for(int j=1;j<=n;j++) 
+			if(!s[j] && dist[j] < temp){ 
+				u = j; 
+				temp = dist[j];
+			}        	
+		s[u]=true;                   
+		for(int j=1;j<=n;j++)          
+			if(!s[j] && (c[u][j] < MaxInt))
+			{   
+			    Type newdist =dist[u]+c[u][j];
+				if(newdist<dist[j])
 				{
-					m[i][j] = t;
-					s[i][j] = k;
+					dist[j] =newdist;   
+				    prev[j] = u;          
 				}
 			}
-		}
-	}
-	return m[1][n];
+    } 
 }
 
-void Traceback(int i,int j,int **s)
-{
-	if(i==j) return;
-	Traceback(i,s[i][j],s);
-	Traceback(s[i][j]+1,j,s);
-	cout<<"Multiply A"<<i<<","<<s[i][j];
-	cout<<" and A"<<(s[i][j]+1)<<","<<j<<endl;
-}
 
-void Traceback1(int i,int j,int **s)
-{
-	if(i==j) cout<<"A"<<i;
-	else
-	{   
-	    cout<<"(";
-		Traceback1(i,s[i][j],s);
-		Traceback1(s[i][j]+1,j,s);
-		cout<<")";
+void DisplayPath(int prev[],int begin,int temp )
+{	
+	if(prev[temp]!=0){
+		DisplayPath(prev,begin,prev[temp]);
+		cout << prev[temp] << "-->";
 	}
+}
+int main()
+{
+	cout << "----------　迪杰斯特拉算法----------" << endl;
+    int n=4; 
+    int start=1; 
+    
+    int dist[MVNum];	
+    int prev[MVNum];	
+   
+    int c[MVNum][MVNum]={{MaxInt,MaxInt,MaxInt,MaxInt,MaxInt,MaxInt},
+	                     {MaxInt,MaxInt,10,MaxInt,30,100},
+						 {MaxInt,MaxInt,MaxInt,50,MaxInt,MaxInt},
+						 {MaxInt,MaxInt,MaxInt,MaxInt,MaxInt,10},
+						 {MaxInt,MaxInt,MaxInt,20,MaxInt,60},
+						 {MaxInt,MaxInt,MaxInt,MaxInt,MaxInt,MaxInt}};
+    
+	
+
+    Dijkstra(n,start,dist,prev,c);
+    
+	cout << endl <<start<<"到其余点的最短路径：\n";
+	for(int i=1;i<=n;i++) 
+	{
+	   if(i!=start&&dist[i]<MaxInt) 
+	   {
+	   	 DisplayPath(prev,start,i);
+	     cout <<i;
+	     
+	     cout <<"  最短路径长度："<<dist[i]<<endl;
+	   }
+	   if(i!=start&&dist[i]==MaxInt) 
+	    {
+	     cout <<start<<"到"<<i<<"没有路径可以到达"<<endl;
+	   }	   
+	}
+	system("pause");
+	return 0;
 }
 
